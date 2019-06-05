@@ -90,7 +90,7 @@ Box.prototype.tryIntersection = function(coords) {
 Box.prototype.draw = function(canv = ctx) { //requer o contexto de desenho
     //pega matriz de tranformação de coordenadas canônicas para coordenadas do canvas
     var M = transformCanvas(WIDTH, HEIGHT);
-    var Mg = mult(M, mult(mult(this.R, this.S), this.T));
+    var Mg = mult(M, mult(mult(this.T, this.R), this.S));
     canv.lineWidth = 2; //largura da borda
     canv.strokeStyle = this.stroke;
     canv.fillStyle = this.fill;
@@ -154,6 +154,9 @@ Circle.prototype.getRotate = function() {
 
 Circle.prototype.setScale = function(x, y) {
     this.S = scale(x, y);
+    if(x == y){
+        this.radius = x * this.radius;
+    }
 }
 
 Circle.prototype.getScale = function() {
@@ -172,10 +175,40 @@ Circle.prototype.setStroke = function(color) {
     this.stroke = color;
 }
 
+Circle.prototype.get_inv_scale = function() {
+    return inv_scale(this.S);
+}
+
+Circle.prototype.get_inv_rotate = function() {
+    return inv_rotate(this.R);
+}
+
+Circle.prototype.get_inv_translate = function() {
+    return inv_translate(this.T);
+}
+
+Circle.prototype.tryIntersection = function(coords) {
+    var inverse_scale = this.get_inv_scale();
+    var inverse_rotate = this.get_inv_rotate();
+    var inverse_translate = this.get_inv_translate();
+
+    var inverse_m = mult(mult(inverse_scale, inverse_rotate), inverse_translate);
+    var local_coords = multVec(inverse_m, coords);
+
+    var distance = Math.sqrt(Math.pow(this.center[0], local_coords[0]) + Math.pow(this.center[1], local_coords[1]));
+
+    if(distance <= this.radius){
+        
+        return true;
+    }
+    console.log("n interc CIRCLE");
+    return false;
+}
+
 Circle.prototype.draw = function(canv = ctx) { //requer o contexto de desenho
     //pega matriz de tranformação de coordenadas canônicas para coordenadas do canvas
     var M = transformCanvas(WIDTH, HEIGHT);
-    var Mg = mult(M, mult(mult(this.R, this.S), this.T));
+    var Mg = mult(M, mult(mult(this.T, this.R), this.S));
     canv.lineWidth = 2; //largura da borda
     canv.strokeStyle = this.stroke;
     canv.fillStyle = this.fill;
